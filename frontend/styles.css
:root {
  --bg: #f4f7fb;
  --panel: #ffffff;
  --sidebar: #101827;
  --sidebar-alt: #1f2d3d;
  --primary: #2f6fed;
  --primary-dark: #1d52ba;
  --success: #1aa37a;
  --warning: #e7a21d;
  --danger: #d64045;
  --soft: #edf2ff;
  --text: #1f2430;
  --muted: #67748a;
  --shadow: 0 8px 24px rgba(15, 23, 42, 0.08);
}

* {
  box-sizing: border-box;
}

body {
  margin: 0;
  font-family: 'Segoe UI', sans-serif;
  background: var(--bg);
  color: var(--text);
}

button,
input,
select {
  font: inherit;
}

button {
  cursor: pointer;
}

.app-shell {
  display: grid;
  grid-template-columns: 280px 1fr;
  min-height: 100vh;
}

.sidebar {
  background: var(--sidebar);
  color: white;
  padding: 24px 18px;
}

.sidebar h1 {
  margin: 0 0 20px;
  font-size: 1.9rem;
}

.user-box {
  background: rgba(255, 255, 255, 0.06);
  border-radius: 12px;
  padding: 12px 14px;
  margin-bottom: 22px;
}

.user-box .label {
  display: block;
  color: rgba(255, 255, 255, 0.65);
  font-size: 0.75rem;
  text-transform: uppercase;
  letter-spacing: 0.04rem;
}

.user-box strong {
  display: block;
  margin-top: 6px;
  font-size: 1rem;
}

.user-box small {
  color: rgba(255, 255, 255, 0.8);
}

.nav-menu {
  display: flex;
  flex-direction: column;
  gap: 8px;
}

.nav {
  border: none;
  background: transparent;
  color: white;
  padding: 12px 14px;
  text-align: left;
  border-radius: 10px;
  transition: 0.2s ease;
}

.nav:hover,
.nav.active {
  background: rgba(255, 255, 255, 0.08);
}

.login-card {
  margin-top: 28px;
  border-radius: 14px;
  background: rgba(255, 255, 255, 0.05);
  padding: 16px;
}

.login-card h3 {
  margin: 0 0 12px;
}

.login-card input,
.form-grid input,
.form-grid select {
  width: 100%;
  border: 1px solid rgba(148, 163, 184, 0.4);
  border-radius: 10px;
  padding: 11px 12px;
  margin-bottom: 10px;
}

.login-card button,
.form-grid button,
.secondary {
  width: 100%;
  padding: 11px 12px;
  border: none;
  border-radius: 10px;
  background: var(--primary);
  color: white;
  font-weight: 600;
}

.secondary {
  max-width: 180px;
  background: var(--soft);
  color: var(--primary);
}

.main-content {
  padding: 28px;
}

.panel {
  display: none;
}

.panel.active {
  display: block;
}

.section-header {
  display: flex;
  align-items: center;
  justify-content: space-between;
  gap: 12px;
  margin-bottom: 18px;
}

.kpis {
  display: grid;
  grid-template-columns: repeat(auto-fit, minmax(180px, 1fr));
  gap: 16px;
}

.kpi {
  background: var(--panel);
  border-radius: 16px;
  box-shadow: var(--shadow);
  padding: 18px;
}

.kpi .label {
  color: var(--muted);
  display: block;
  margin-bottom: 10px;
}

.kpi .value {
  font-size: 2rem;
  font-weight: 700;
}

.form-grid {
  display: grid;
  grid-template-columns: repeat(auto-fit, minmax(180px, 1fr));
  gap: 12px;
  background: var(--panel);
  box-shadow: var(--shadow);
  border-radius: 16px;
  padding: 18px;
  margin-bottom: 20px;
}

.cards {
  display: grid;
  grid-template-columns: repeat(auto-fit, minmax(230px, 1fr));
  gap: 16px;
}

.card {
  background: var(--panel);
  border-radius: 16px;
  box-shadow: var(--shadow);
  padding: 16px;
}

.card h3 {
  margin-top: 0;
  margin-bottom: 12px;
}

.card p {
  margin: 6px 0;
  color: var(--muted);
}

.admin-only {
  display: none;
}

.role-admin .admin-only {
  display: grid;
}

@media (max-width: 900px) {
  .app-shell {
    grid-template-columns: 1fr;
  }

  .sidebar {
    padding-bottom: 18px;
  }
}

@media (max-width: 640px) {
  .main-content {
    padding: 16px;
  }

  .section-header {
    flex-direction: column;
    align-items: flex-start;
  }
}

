@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventario de mesas y sillas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h1>Inventario</h1>
+        <div class="user-box" id="userBox">
+          <span class="label">Sesión</span>
+          <strong id="userName">No iniciado</strong>
+          <small id="userRole">Invitado</small>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav active" data-target="dashboard">Dashboard</button>
+          <button class="nav" data-target="resources">Recursos</button>
+          <button class="nav" data-target="reservations">Reservas</button>
+          <button class="nav" data-target="loans">Préstamos</button>
+          <button class="nav" data-target="history">Historial</button>
+        </nav>
+
+        <div id="loginPanel" class="login-card">
+          <h3>Acceso</h3>
+          <input id="emailInput" type="email" placeholder="admin@inventario.local" />
+          <input id="passwordInput" type="password" placeholder="Contraseña" />
+          <button id="loginButton">Iniciar sesión</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="dashboard" class="panel active">
+          <h2>Dashboard</h2>
+          <div id="kpis" class="kpis"></div>
+        </section>
+
+        <section id="resources" class="panel">
+          <div class="section-header">
+            <h2>Recursos</h2>
+            <button id="refreshResourcesBtn" class="secondary">Actualizar</button>
+          </div>
+
+          <form id="resourceForm" class="form-grid admin-only">
+            <input id="resourceType" placeholder="Tipo: mesa o silla" required />
+            <input id="resourceName" placeholder="Nombre del recurso" required />
+            <input id="resourceTotal" type="number" min="1" placeholder="Cantidad total" required />
+            <button type="submit">Agregar recurso</button>
+          </form>
+
+          <div id="resourceList" class="cards"></div>
+        </section>
+
+        <section id="reservations" class="panel">
+          <div class="section-header">
+            <h2>Reservas</h2>
+          </div>
+
+          <form id="reservationForm" class="form-grid">
+            <select id="reservationResource" required></select>
+            <input id="reservationQuantity" type="number" min="1" placeholder="Cantidad" required />
+            <input id="reservationDate" type="date" required />
+            <input id="reservationStart" type="time" placeholder="Hora inicio" />
+            <input id="reservationEnd" type="time" placeholder="Hora fin" />
+            <button type="submit">Registrar reserva</button>
+          </form>
+
+          <div id="reservationList" class="cards"></div>
+        </section>
+
+        <section id="loans" class="panel">
+          <div class="section-header">
+            <h2>Préstamos</h2>
+          </div>
+
+          <form id="loanForm" class="form-grid">
+            <select id="loanResource" required></select>
+            <input id="loanQuantity" type="number" min="1" placeholder="Cantidad" required />
+            <input id="loanExpectedDate" type="date" required />
+            <input id="loanNotes" placeholder="Observaciones" />
+            <button type="submit">Registrar préstamo</button>
+          </form>
+
+          <div id="loanList" class="cards"></div>
+        </section>
+
+        <section id="history" class="panel">
+          <div class="section-header">
+            <h2>Historial</h2>
+          </div>
+          <div id="historyList" class="cards"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+

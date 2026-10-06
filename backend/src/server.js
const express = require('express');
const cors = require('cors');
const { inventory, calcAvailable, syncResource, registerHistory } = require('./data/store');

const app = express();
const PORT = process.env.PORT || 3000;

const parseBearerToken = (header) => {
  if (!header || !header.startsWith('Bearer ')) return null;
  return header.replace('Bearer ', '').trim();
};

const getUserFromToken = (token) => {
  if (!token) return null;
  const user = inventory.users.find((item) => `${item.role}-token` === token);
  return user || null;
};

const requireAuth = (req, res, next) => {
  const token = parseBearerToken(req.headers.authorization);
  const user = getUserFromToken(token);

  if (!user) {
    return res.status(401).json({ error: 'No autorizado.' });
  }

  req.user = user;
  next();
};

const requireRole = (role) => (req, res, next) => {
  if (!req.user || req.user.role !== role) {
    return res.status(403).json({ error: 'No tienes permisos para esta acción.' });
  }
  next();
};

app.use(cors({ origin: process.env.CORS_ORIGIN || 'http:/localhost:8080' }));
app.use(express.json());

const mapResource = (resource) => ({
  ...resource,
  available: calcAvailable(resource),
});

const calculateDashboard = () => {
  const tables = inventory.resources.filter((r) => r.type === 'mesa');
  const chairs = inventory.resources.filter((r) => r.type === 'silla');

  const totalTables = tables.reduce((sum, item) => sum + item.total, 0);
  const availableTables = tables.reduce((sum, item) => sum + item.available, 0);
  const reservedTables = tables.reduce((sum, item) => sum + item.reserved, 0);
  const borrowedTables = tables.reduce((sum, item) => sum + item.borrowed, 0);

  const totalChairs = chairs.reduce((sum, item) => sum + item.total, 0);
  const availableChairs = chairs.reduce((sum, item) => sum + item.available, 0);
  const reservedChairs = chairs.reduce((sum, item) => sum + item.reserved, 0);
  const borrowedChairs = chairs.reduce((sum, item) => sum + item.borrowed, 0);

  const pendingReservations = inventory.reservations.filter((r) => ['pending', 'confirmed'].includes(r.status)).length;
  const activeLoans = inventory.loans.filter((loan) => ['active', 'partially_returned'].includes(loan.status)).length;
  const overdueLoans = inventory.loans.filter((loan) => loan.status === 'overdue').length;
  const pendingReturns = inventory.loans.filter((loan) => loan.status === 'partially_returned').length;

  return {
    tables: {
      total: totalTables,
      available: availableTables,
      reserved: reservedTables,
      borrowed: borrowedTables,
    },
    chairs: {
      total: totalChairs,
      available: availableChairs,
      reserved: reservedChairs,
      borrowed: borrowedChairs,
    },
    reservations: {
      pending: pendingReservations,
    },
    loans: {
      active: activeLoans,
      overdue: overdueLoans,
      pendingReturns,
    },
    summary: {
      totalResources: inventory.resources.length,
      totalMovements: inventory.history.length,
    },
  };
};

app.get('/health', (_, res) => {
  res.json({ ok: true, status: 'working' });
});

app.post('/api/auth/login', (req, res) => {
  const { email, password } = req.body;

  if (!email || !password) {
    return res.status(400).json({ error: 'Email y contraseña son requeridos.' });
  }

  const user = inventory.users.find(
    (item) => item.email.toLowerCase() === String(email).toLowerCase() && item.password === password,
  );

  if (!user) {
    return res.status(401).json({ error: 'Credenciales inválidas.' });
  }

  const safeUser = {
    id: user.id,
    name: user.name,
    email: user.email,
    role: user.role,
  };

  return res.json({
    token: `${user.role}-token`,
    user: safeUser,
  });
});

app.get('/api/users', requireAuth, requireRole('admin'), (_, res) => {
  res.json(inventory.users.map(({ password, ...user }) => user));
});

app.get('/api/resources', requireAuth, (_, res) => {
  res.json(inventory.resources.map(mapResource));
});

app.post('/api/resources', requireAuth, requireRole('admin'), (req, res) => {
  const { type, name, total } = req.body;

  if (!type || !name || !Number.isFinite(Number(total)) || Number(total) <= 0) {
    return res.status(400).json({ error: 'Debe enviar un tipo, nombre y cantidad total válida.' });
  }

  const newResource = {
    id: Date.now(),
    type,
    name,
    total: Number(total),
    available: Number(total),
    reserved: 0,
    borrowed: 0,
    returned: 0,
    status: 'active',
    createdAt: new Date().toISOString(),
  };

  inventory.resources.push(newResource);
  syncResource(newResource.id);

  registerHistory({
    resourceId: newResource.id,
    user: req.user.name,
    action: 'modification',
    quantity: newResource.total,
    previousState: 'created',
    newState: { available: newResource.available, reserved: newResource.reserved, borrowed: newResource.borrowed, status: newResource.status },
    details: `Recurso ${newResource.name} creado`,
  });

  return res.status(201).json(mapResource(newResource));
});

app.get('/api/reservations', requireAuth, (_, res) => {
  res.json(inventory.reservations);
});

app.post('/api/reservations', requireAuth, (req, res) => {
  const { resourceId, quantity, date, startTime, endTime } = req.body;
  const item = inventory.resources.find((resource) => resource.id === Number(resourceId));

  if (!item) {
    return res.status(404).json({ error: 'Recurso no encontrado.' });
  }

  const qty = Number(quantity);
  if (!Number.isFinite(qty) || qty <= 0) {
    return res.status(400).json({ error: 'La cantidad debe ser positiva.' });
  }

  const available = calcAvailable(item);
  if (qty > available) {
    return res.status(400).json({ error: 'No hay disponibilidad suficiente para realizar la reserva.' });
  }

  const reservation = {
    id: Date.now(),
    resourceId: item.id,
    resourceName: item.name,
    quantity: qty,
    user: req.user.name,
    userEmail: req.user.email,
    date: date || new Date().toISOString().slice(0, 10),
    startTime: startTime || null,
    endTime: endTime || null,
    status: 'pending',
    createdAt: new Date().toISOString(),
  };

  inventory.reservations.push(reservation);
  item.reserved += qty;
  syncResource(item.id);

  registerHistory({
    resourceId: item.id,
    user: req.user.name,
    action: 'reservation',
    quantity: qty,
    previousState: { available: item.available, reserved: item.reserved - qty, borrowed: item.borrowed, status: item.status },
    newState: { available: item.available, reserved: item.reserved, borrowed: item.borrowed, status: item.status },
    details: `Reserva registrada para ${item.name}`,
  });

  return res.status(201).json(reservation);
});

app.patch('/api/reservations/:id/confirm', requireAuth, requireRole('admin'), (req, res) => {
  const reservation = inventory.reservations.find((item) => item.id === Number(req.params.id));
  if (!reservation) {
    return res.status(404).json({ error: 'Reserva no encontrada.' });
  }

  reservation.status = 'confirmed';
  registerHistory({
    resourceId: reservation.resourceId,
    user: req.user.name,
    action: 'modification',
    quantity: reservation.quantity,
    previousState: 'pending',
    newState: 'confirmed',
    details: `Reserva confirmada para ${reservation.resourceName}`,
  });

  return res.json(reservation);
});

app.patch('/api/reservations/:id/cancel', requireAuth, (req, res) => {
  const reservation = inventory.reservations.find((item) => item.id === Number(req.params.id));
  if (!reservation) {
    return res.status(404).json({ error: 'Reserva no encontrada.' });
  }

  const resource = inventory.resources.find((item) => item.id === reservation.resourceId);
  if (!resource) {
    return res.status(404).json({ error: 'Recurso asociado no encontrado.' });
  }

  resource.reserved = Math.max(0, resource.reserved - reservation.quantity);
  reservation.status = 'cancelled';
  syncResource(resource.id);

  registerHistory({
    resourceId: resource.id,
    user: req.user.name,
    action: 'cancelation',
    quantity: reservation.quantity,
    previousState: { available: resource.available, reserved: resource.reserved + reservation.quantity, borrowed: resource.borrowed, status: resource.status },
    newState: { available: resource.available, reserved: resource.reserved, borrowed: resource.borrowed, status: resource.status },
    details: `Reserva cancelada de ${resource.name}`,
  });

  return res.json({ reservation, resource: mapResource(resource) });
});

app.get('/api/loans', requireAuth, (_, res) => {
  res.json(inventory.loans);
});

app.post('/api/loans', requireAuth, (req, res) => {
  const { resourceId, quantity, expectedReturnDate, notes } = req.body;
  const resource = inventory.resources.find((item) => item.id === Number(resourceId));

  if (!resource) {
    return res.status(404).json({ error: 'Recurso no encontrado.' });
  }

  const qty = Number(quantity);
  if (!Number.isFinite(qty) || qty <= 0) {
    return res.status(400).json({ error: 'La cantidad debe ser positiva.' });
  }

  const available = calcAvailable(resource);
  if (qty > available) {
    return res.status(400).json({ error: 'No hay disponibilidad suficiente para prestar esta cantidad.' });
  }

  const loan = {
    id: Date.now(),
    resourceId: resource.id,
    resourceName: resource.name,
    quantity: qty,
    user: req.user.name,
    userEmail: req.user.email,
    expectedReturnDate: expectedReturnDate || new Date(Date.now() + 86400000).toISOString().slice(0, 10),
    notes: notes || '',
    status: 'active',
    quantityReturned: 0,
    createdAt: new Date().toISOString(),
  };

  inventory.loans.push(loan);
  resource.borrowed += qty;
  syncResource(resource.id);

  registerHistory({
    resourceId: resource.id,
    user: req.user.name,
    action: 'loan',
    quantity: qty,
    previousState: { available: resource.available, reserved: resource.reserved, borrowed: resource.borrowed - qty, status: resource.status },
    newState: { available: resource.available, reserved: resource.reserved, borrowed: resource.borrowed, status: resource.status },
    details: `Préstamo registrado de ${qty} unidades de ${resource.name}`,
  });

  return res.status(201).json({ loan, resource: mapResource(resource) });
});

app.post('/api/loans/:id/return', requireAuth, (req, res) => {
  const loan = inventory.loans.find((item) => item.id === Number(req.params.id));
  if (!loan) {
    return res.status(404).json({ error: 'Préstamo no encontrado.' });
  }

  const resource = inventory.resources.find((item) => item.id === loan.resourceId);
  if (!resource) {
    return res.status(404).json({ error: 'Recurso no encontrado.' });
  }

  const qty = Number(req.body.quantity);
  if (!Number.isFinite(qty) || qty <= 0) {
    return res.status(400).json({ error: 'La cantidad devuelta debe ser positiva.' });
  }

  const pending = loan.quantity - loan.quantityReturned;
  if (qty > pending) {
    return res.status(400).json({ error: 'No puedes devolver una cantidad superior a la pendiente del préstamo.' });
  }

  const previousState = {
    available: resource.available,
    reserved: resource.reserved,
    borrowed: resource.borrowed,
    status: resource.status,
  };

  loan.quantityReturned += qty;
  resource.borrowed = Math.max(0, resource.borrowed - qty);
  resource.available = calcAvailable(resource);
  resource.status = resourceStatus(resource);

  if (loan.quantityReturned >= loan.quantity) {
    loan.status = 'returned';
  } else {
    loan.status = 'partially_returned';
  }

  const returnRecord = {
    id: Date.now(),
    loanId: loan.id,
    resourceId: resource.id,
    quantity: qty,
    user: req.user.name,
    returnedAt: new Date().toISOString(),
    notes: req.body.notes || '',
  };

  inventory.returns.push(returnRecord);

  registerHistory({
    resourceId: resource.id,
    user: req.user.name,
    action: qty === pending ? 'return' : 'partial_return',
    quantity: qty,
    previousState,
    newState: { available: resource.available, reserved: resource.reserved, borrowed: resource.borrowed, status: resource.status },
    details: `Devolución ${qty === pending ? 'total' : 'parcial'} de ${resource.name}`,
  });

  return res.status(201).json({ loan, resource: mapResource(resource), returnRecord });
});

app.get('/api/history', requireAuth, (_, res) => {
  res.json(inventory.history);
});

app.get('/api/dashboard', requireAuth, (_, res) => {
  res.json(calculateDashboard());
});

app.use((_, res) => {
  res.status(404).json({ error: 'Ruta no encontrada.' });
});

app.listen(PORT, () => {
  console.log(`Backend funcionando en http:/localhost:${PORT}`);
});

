@@ -1,0 +1,98 @@
+const initialUsers = [
+  {
+    id: 1,
+    name: 'Administrador principal',
+    email: 'admin@inventario.local',
+    password: 'admin123',
+    role: 'admin',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    name: 'Usuario demo',
+    email: 'usuario@inventario.local',
+    password: 'usuario123',
+    role: 'user',
+    createdAt: new Date().toISOString(),
+  },
+];
+
+const initialResources = [
+  {
+    id: 1,
+    type: 'mesa',
+    name: 'Mesa estándar',
+    total: 20,
+    available: 20,
+    reserved: 0,
+    borrowed: 0,
+    returned: 0,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    type: 'silla',
+    name: 'Silla estándar',
+    total: 100,
+    available: 100,
+    reserved: 0,
+    borrowed: 0,
+    returned: 0,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+  },
+];
+
+const inventory = {
+  users: initialUsers,
+  resources: initialResources,
+  reservations: [],
+  loans: [],
+  returns: [],
+  history: [],
+};
+
+const calcAvailable = (resource) => Math.max(0, resource.total - resource.reserved - resource.borrowed);
+
+const resourceStatus = (resource) => {
+  if (resource.total <= 0) return 'out_of_stock';
+  if (resource.borrowed > 0) return 'in_loan';
+  if (resource.reserved > 0) return 'reserved';
+  if (resource.available <= 0) return 'unavailable';
+  return 'active';
+};
+
+const syncResource = (resourceId) => {
+  const resource = inventory.resources.find((item) => item.id === resourceId);
+  if (!resource) return null;
+
+  resource.available = calcAvailable(resource);
+  resource.status = resourceStatus(resource);
+  return resource;
+};
+
+const registerHistory = ({ resourceId, user, action, quantity, previousState, newState, details }) => {
+  const record = {
+    id: Date.now() + Math.random(),
+    resourceId,
+    user,
+    action,
+    quantity,
+    previousState,
+    newState,
+    details,
+    createdAt: new Date().toISOString(),
+  };
+
+  inventory.history.unshift(record);
+  return record;
+};
+
+module.exports = {
+  inventory,
+  calcAvailable,
+  syncResource,
+  registerHistory,
+};
+
