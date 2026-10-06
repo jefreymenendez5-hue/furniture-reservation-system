@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Mesas y Sillas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h1>Inventario</h1>
+        <nav>
+          <button class="nav active" data-section="dashboard">Dashboard</button>
+          <button class="nav" data-section="resources">Recursos</button>
+          <button class="nav" data-section="reservations">Reservas</button>
+          <button class="nav" data-section="loans">Préstamos</button>
+          <button class="nav" data-section="returns">Devoluciones</button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <section id="dashboard" class="panel active">
+          <h2>Panel principal</h2>
+          <div id="kpis" class="kpis"></div>
+        </section>
+
+        <section id="resources" class="panel">
+          <h2>Recursos</h2>
+          <form id="resource-form" class="form-card">
+            <input id="resource-type" placeholder="Tipo (mesa/silla)" required />
+            <input id="resource-name" placeholder="Nombre" required />
+            <input id="resource-total" type="number" min="1" placeholder="Cantidad total" required />
+            <button type="submit">Agregar recurso</button>
+          </form>
+          <div id="resource-list" class="cards"></div>
+        </section>
+
+        <section id="reservations" class="panel">
+          <h2>Reservas</h2>
+          <form id="reservation-form" class="form-card">
+            <select id="reservation-resource" required></select>
+            <input id="reservation-quantity" type="number" min="1" placeholder="Cantidad" required />
+            <input id="reservation-user" placeholder="Usuario" required />
+            <input id="reservation-date" type="date" required />
+            <button type="submit">Registrar reserva</button>
+          </form>
+          <div id="reservation-list" class="cards"></div>
+        </section>
+
+        <section id="loans" class="panel">
+          <h2>Préstamos</h2>
+          <form id="loan-form" class="form-card">
+            <select id="loan-resource" required></select>
+            <input id="loan-quantity" type="number" min="1" placeholder="Cantidad" required />
+            <input id="loan-user" placeholder="Responsable" required />
+            <input id="loan-date" type="date" required />
+            <button type="submit">Registrar préstamo</button>
+          </form>
+          <div id="loan-list" class="cards"></div>
+        </section>
+
+        <section id="returns" class="panel">
+          <h2>Devoluciones</h2>
+          <form id="return-form" class="form-card">
+            <select id="return-loan" required></select>
+            <select id="return-resource" required></select>
+            <input id="return-quantity" type="number" min="1" placeholder="Cantidad devuelta" required />
+            <input id="return-user" placeholder="Usuario que devuelve" required />
+            <button type="submit">Registrar devolución</button>
+          </form>
+          <div id="return-list" class="cards"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

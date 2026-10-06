@@ -1,0 +1,688 @@
+const API = 'http://localhost:3000/api';
+
+const sectionButtons = document.querySelectorAll('.nav');
+const panels = document.querySelectorAll('.panel');
+
+sectionButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    sectionButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+    panels.forEach((panel) => panel.classList.toggle('active', panel.id === button.dataset.section));
+  });
+});
+
+async function fetchJson(url, options = {}) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Error en la solicitud');
+  }
+  return data;
+}
+
+function renderKpis(data) {
+  const kpis = document.getElementById('kpis');
+  const items = [
+    { label: 'Mesas totales', value: data.tables.total },
+    { label: 'Mesas disponibles', value: data.tables.available },
+    { label: 'Mesas reservadas', value: data.tables.reserved },
+    { label: 'Mesas prestadas', value: data.tables.borrowed },
+    { label: 'Sillas totales', value: data.chairs.total },
+    { label: 'Sillas disponibles', value: data.chairs.available },
+    { label: 'Sillas reservadas', value: data.chairs.reserved },
+    { label: 'Sillas prestadas', value: data.chairs.borrowed },
+    { label: 'Reservas pendientes', value: data.reservations.pending },
+    { label: 'Préstamos activos', value: data.loans.active },
+    { label: 'Préstamos vencidos', value: data.loans.overdue },
+    { label: 'Devoluciones pendientes', value: data.loans.pendingReturns },
+  ];
+
+  kpis.innerHTML = items.map((item) => `
+    <div class="kpi">
+      <span class="label">${item.label}</span>
+      <span class="value">${item.value}</span>
+    </div>
+  `).join('');
+}
+
+function renderResourceList(resources) {
+  const list = document.getElementById('resource-list');
+  list.innerHTML = resources.map((resource) => `
+    <div class="card">
+      <h3>${resource.name}</h3>
+      <p>Tipo: ${resource.type}</p>
+      <p>Total: ${resource.total}</p>
+      <p>Disponible: ${resource.available}</p>
+      <p>Reservadas: ${resource.reserved}</p>
+      <p>Prestadas: ${resource.borrowed}</p>
+      <p>Estado: ${resource.status}</p>
+    </div>
+  `).join('');
+}
+
+function renderReservationList(list) {
+  const el = document.getElementById('reservation-list');
+  el.innerHTML = list.map((item) => `
+    <div class="card">
+      <h3>${item.resourceName}</h3>
+      <p>Usuario: ${item.user}</p>
+      <p>Cantidad: ${item.quantity}</p>
+      <p>Estado: ${item.status}</p>
+      <p>Fecha: ${item.date}</p>
+    </div>
+  `).join('');
+}
+
+function renderLoanList(list) {
+  const el = document.getElementById('loan-list');
+  el.innerHTML = list.map((item) => `
+    <div class="card">
+      <h3>${item.resourceName}</h3>
+      <p>Responsable: ${item.user}</p>
+      <p>Cantidad: ${item.quantity}</p>
+      <p>Estado: ${item.status}</p>
+      <p>Devolución esperada: ${item.expectedReturnDate}</p>
+    </div>
+  `).join('');
+}
+
+function renderReturnList(list) {
+  const el = document.getElementById('return-list');
+  el.innerHTML = list.map((item) => `
+    <div class="card">
+      <h3>Devolución #${item.id}</h3>
+      <p>Usuario: ${item.user}</p>
+      <p>Cantidad: ${item.quantity}</p>
+      <p>Fecha: ${new Date(item.returnedAt).toLocaleString()}</p>
+    </div>
+  `).join('');
+}
+
+function populateSelect(selectId, items, valueKey = 'id', labelKey = 'name') {
+  const select = document.getElementById(selectId);
+  select.innerHTML = items.map(item => `<option value="${item[valueKey]}">${item[labelKey]}</option>`).join('');
+}
+
+async function loadDashboard() {
+  const data = await fetchJson(`${API}/dashboard`);
+  renderKpis(data);
+}
+
+async function loadResources() {
+  const resources = await fetchJson(`${API}/resources`);
+  renderResourceList(resources);
+  populateSelect('reservation-resource', resources, 'id', 'name');
+  populateSelect('loan-resource', resources, 'id', 'name');
+  populateSelect('return-resource', resources, 'id', 'name');
+}
+
+async function loadReservations() {
+  const reservations = await fetchJson(`${API}/reservations`);
+  renderReservationList(reservations);
+}
+
+async function loadLoans() {
+  const loans = await fetchJson(`${API}/loans`);
+  renderLoanList(loans);
+  populateSelect('return-loan', loans, 'id', 'resourceName');
+}
+
+async function loadReturns() {
+  const returns = await fetchJson(`${API}/returns`);
+  renderReturnList(returns);
+}
+
+async function reloadAll() {
+  await Promise.all([
+    loadDashboard(),
+    loadResources(),
+    loadReservations(),
+    loadLoans(),
+    loadReturns(),
+  ]);
+}
+
+document.getElementById('resource-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    type: document.getElementById('resource-type').value,
+    name: document.getElementById('resource-name').value,
+    total: Number(document.getElementById('resource-total').value),
+    user: 'admin',
+  };
+
+  await fetchJson(`${API}/resources`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  e.target.reset();
+  reloadAll();
+});
+
+document.getElementById('reservation-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    resourceId: Number(document.getElementById('reservation-resource').value),
+    quantity: Number(document.getElementById('reservation-quantity').value),
+    user: document.getElementById('reservation-user').value,
+    date: document.getElementById('reservation-date').value,
+  };
+
+  await fetchJson(`${API}/reservations`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  e.target.reset();
+  reloadAll();
+});
+
+document.getElementById('loan-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    resourceId: Number(document.getElementById('loan-resource').value),
+    quantity: Number(document.getElementById('loan-quantity').value),
+    user: document.getElementById('loan-user').value,
+    expectedReturnDate: document.getElementById('loan-date').value,
+  };
+
+  await fetchJson(`${API}/loans`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  e.target.reset();
+  reloadAll();
+});
+
+document.getElementById('return-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    loanId: Number(document.getElementById('return-loan').value),
+    resourceId: Number(document.getElementById('return-resource').value),
+    quantity: Number(document.getElementById('return-quantity').value),
+    user: document.getElementById('return-user').value,
+  };
+
+  await fetchJson(`${API}/returns`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  e.target.reset();
+  reloadAll();
+});
+
+reloadAll();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
