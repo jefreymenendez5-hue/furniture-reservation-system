@@ -1,0 +1,222 @@
+# Arquitectura y diseño del sistema
+
+## 1. Objetivo principal
+
+El proyecto debe mantener una fuente única y confiable del inventario, de manera que las cantidades de recursos disponibles, reservados y prestados siempre coincidan con las operaciones reales ejecutadas por el sistema.
+
+## 2. Arquitectura general
+
+El sistema se diseña en capas bien separadas:
+
+- Frontend: interfaz web responsive para dashboard, inventario, reservas, préstamos, devoluciones y historial.
+- Backend: API REST para todas las operaciones del negocio.
+- Base de datos: PostgreSQL para persistencia y consistencia.
+- Seguridad: autenticación con JWT y control de roles.
+- Dominio: inventario, reservas, préstamos, devoluciones, historial y reportes.
+
+### Capa de presentación
+
+- Dashboard con KPIs
+- Gestión de inventario
+- Formularios de reservas y préstamos
+- Vistas de devoluciones
+- Panel de historial y reportes
+
+### Capa de aplicación
+
+- Validación de disponibilidad
+- Cálculo de inventario
+- Actualización de estados de reservas y préstamos
+- Auditoría por movimientos
+- Autorización por rol
+
+### Capa de persistencia
+
+- Tablas para usuarios, recursos, reservas, préstamos y movimientos
+- Transacciones atómicas
+- Historial para auditoría
+- Snapshot del inventario actual
+
+## 3. Entidades y relaciones principales
+
+### Usuarios y roles
+
+- users
+- roles
+- permisos (si se requiere más granularidad)
+
+### Inventario
+
+- resources
+- inventory_snapshot
+- inventory_movements
+
+### Operaciones
+
+- reservations
+- reservation_items
+- loans
+- loan_items
+- returns
+- return_items
+
+## 4. Fuente única del inventario
+
+La fuente única del inventario es la combinación de:
+
+- `resources` para el estado actual del stock
+- `inventory_movements` para el historial completo
+- `inventory_snapshot` para un punto de control del inventario actualizado
+
+Regla clave:
+
+- cada operación debe ejecutarse en una transacción
+- cada operación debe actualizar el recurso
+- cada operación debe registrar el movimiento
+- todas las lecturas del inventario deben basarse en ese estado actualizado
+
+## 5. Reglas de negocio
+
+- No se pueden reservar cantidades mayores a la disponibilidad.
+- No se pueden prestar cantidades mayores a la disponibilidad.
+- No se pueden devolver cantidades mayores a la pendiente.
+- No existen cantidades negativas.
+- Una reserva no puede duplicar el mismo recurso en una misma operación.
+- Las fechas deben ser coherentes.
+- Cada operación debe registrar el usuario responsable, fecha, cantidad y cambios de estado.
+
+## 6. Flujos principales
+
+### Reserva
+
+1. Usuario consulta disponibilidad.
+2. Sistema valida cantidad disponible.
+3. Se crea la reserva con estado `pending`.
+4. Se actualiza el inventario: disponible disminuye, reservado aumenta.
+5. Cuando se confirma: pasa a `confirmed`.
+6. Cuando se cancela: se revierte la reserva.
+
+### Préstamo
+
+1. Se valida que haya stock disponible.
+2. Se registra el préstamo con responsable y fecha esperada.
+3. Se descuenta del inventario disponible y aumenta prestado.
+4. Cuando se hace devolución parcial, reducen los pendientes.
+5. Cuando llega a cero, el préstamo pasa a `returned`.
+
+### Devolución
+
+1. Se registra la cantidad devuelta.
+2. Se valida que no supere la cantidad pendiente.
+3. Se actualiza inventory: prestado disminuye y disponible aumenta.
+4. Si devuelve todo, cambia a `returned`.
+5. Si devuelve parcialmente, conserva saldo pendiente.
+
+## 7. Estados sugeridos
+
+### Reservas
+
+- pending
+- confirmed
+- cancelled
+- finalized
+
+### Préstamos
+
+- pending
+- active
+- partially_returned
+- returned
+- overdue
+
+### Recursos
+
+- active
+- inactive
+- maintenance
+- unavailable
+- out_of_stock
+
+## 8. Estructura de la API
+
+### Autenticación
+
+- POST /api/auth/login
+- POST /api/auth/register
+- POST /api/auth/refresh
+
+### Usuarios
+
+- GET /api/users
+- POST /api/users
+- PATCH /api/users/:id
+
+### Recursos
+
+- GET /api/resources
+- POST /api/resources
+- PATCH /api/resources/:id
+
+### Reservas
+
+- GET /api/reservations
+- POST /api/reservations
+- PATCH /api/reservations/:id/confirm
+- PATCH /api/reservations/:id/cancel
+
+### Préstamos
+
+- GET /api/loans
+- POST /api/loans
+- POST /api/loans/:id/return
+- PATCH /api/loans/:id/mark-overdue
+
+### Historial y reportes
+
+- GET /api/history
+- GET /api/reports/dashboard
+
+## 9. Estructura de carpetas recomendada
+
+```text
+project-root/
+├── apps/
+│   ├── web/
+│   │   └── src/
+│   └── api/
+│       └── src/
+├── packages/
+│   └── shared/
+├── database/
+│   └── postgres/
+│       └── schema.sql
+├── docker-compose.yml
+├── docs/
+│   └── architecture.md
+├── .env.example
+├── README.md
+└── scripts/
+```
+
+## 10. Siguientes pasos del proyecto
+
+1. Configurar PostgreSQL con Docker.
+2. Crear esquema SQL y migraciones.
+3. Implementar autenticación con JWT y roles.
+4. Crear el backend modular por dominios.
+5. Implementar React + Vite + Tailwind para la interfaz.
+6. Añadir validaciones, reportes y dashboard avanzado.
+7. Probar transacciones de inventario.
+
+## 11. Recomendación de implementación real
+
+Para esta aplicación, la mejor ruta es:
+
+- PostgreSQL + Prisma ORM
+- NestJS o Express con módulos por dominio
+- React + Vite + Tailwind
+- JWT con roles admin/user
+- API REST con validaciones centralizadas
+- Dashboard con KPIs y listados
+
+Esto permite mantener la lógica del inventario segura, escalable y mantenible.
